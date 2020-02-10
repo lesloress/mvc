@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace HomeTask.App_Code
 {
@@ -17,6 +14,18 @@ namespace HomeTask.App_Code
                 ul.InnerHtml += li;
             }
             return new MvcHtmlString(ul.ToString());
+        }
+
+        public static MvcHtmlString CreateOrderedList(this HtmlHelper html, string[] items)
+        {
+            TagBuilder ol = new TagBuilder("ol");
+            foreach (string item in items)
+            {
+                TagBuilder li = new TagBuilder("li");
+                li.SetInnerText(item);
+                ol.InnerHtml += li;
+            }
+            return new MvcHtmlString(ol.ToString());
         }
     }
 }

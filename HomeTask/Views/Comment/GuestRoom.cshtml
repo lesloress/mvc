@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<Domain.Entities.Comment>
+@{
     ViewBag.Title = "GuestRoom";
 }
 
@@ -7,13 +8,13 @@
     <h3>Комментарии</h3>
     <br />
 
-    @foreach (var comment in ViewBag.Comments)
+    @foreach (var comment in Model)
     {
         <div class="card">
             <div class="card-body">
-                <p><strong>@comment[0]</strong></p>
-                <p>@comment[1]</p>
-                <small class="text-muted">@comment[2]</small>
+                <p><strong>@comment.Name</strong></p>
+                <p>@comment.Text</p>
+                <small class="text-muted">@comment.Date.ToShortDateString()</small>
             </div>
         </div>
         <br />
@@ -40,10 +41,10 @@
 
     @using (Html.BeginForm())
     {
-        @Html.TextBox("Name", "", new { @class = "form-control", placeholder = "Ваше имя", rows = "3" })
+        @Html.TextBox("Name", "", new { @class = "form-control", placeholder = "Ваше имя", rows = "3", required=""})
         @Html.ValidationMessage("Name")
         <br />
-        @Html.TextArea("Comment", "", new { @class = "form-control", placeholder = "Ваш комментарий...", rows = "3" })
+        @Html.TextArea("Comment", "", new { @class = "form-control", placeholder = "Ваш комментарий...", rows = "3", required="" })
         <br />
         <input type="hidden" name="page" value="@ViewBag.Page"/>
         <input class="btn btn-success" type="submit" name="Send" value="Отправить" />

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Domain.Entities;
+using Domain.Repository;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -7,7 +9,10 @@ namespace HomeTask.Controllers
 {
     public class CommentController : Controller
     {
-        private List<string[]> comments = new List<string[]>()
+        IRepository<Comment> db;
+
+
+        /*private List<string[]> comments = new List<string[]>()
         {
             new string[] {"Ivan Ivanov", 
                 "Lorem Ipsum is simply dummy text of the printing and typesetting industry.", 
@@ -54,55 +59,65 @@ namespace HomeTask.Controllers
             new string[] {"Ivan Ivanov",
                 "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
                 "01.02.2020"}
-        };
+        };*/
         private const int size = 6;
+
+        public CommentController()
+        {
+            db = new Repository<Comment>();
+        }
 
         [HttpGet]
         public ActionResult GuestRoom(int page = 0)
         {
-            List<string[]> data = comments.Skip(page * size).Take(size).ToList();
+            IEnumerable<Comment> comments = db.GetAll();
 
-            int count = comments.Count;
-            ViewBag.MaxPage = (count / size) - (count % size == 0 ? 1 : 0);
+            int count = (comments as List<Comment>).Count;
 
+            GetPages(ref comments, page);
+
+            ViewBag.MaxPage = Max(size, count);
             ViewBag.Page = page;
 
-            ViewBag.Comments = data;
-
-            return View();
+            return View(comments);
         }
 
         [HttpPost]
         public ActionResult GuestRoom(FormCollection formCollection)
         {
-            int page;
+            int page = 0;
 
-            if (string.IsNullOrWhiteSpace(formCollection["Name"]) 
-                || string.IsNullOrWhiteSpace(formCollection["Comment"]))
+            db.Add(new Comment
             {
-                page = Convert.ToInt32(formCollection["Page"]);
-                Response.Write("<script>alert('Заполните все поля!')</script>");
-            }
+                Name = formCollection["Name"],
+                Text = formCollection["Comment"],
+                Date = DateTime.Now.Date
+            });
 
-            else
-            {
-                page = 0;
-                string[] comment = { formCollection["Name"], formCollection["Comment"],
-                DateTime.Now.ToShortDateString()};
-                comments.Insert(0, comment);
-            }
+            db.Save();
 
-            List<string[]> data = comments.Skip(page * size).Take(size).ToList();
+            IEnumerable<Comment> comments = db.GetAll();
 
-            int count = comments.Count;
-            ViewBag.MaxPage = (count / size) - (count % size == 0 ? 1 : 0);
+            int count = (comments as List<Comment>).Count;
 
+            GetPages(ref comments, page);
+
+            ViewBag.MaxPage = Max(size, count);
             ViewBag.Page = page;
 
-            ViewBag.Comments = data;
-
-            return View();
-
+            return View(comments);
         }
+
+        private IEnumerable<Comment> GetPages(ref IEnumerable<Comment> comments, int page = 0)
+        {
+            comments = comments
+                .OrderByDescending(c => c.Date)
+                .Skip(page * size)
+                .Take(size)
+                .ToList();
+            return comments;
+        }
+
+        private int Max(int size, int count) => (count / size) - (count % size == 0 ? 1 : 0);
     }
 }

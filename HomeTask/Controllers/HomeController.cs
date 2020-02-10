@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Domain.Entities;
+using Domain.Repository;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -6,92 +8,45 @@ namespace HomeTask.Controllers
 {
     public class HomeController : Controller
     {
-        private List<string[]> articles = new List<string[]>()
+        IArticleRepository db;
+
+        private string[] elementaryBooks =
         {
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            },
-            new string[]
-            {
-                "Статья",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. " +
-                    "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, " +
-                    "when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-                "01.02.2020"
-            }
+            "Head First C#, Jennifer Greene, Andrew Stellman",
+            "C# 6.0 and the .NET 4.6 Framework (7th Edition), Andrew Troelsen, Philip Japikse",
+            "metanit.com"
         };
-        private string[] resources = {
+        private string[] books = 
+        {
             "CLR via C#. Программирование на платформе Microsoft .NET Framework 4.5 на языке C#, Джеффри Рихтер.",
             "C# 7.0 in a Nutshell: The Definitive Reference, Joseph Albahari, Ben Albahari",
-            "Effective C# и More Effective C#, Bill Wagner"
+            "Effective C# и More Effective C#, Bill Wagner",
+            "C# in Depth, Jon Skeet, Third Edition"
         };
         private const int size = 3;
 
+        public HomeController()
+        {
+            db = new ArticleRepository();
+        }
+
         public ActionResult Index(int page = 0)
         {
-            List<string[]> data = articles.Skip(page * size).Take(size).ToList();
+            IEnumerable<Article> articles = db.GetAll();
 
-            int count = articles.Count;
-            this.ViewBag.MaxPage = (count / size) - (count % size == 0 ? 1 : 0);
+            int count = (articles as List<Article>).Count;
 
-            this.ViewBag.Page = page;
+            articles = articles
+                .OrderByDescending(a => a.Date)
+                .Skip(page * size)
+                .Take(size)
+                .ToList();
 
-            ViewBag.Articles = data;
+            //Used to determine wether we need paging buttons or not
+            ViewBag.MaxPage = (count / size) - (count % size == 0 ? 1 : 0);
+            ViewBag.Page = page;
 
-            return View();
+            return View(articles);
         }
 
         [HttpGet]
@@ -122,8 +77,15 @@ namespace HomeTask.Controllers
             if (formCollection["ThirdFirst"] != "false")
                 sum++;
 
-            ViewBag.Result = $"{sum*100/5} %";
-            ViewBag.Resources = resources;
+            int result = sum*100/5;
+            ViewBag.Result = result + " %";
+
+            if (result > 50)
+                ViewBag.Resources = elementaryBooks;
+
+            else if (result <= 50)
+                ViewBag.Resources = books;
+
 
             return View("QuestionaryResult");
         }
